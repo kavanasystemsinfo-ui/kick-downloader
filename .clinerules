@@ -1,0 +1,22 @@
+# Kick Video Downloader - TDD Methodology
+
+## 1. Project Context
+- Download Kick streams automatically
+- Store in organized structure
+- Serve via nginx web interface
+
+## 2. TDD Rules
+- Tests first, code later
+- Each feature: test → implement → refactor
+- No automation without validation
+
+## 3. Architecture
+- src/downloader.py - Main download logic
+- src/server.py - API endpoints  
+- tests/test_downloader.py - Download tests
+- deploy/ - nginx, systemd configs
+
+## 4. Quality Gates
+- All downloads must be validated
+- File integrity checks
+- Error handling for network issues

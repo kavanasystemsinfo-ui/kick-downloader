@@ -1,0 +1,7 @@
+# Kick Video Downloader
+# Internal tools and dependencies
+
+yt-dlp>=2024.1.0
+ffmpeg-python>=0.2.0
+flask>=3.0.0
+gunicorn>=21.0.0

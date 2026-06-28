@@ -1,0 +1,15 @@
+[Unit]
+Description=Kick Video Downloader Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/kick-downloader
+Environment="PATH=/opt/kick-downloader/.venv/bin"
+ExecStart=/opt/kick-downloader/.venv/bin/python /opt/kick-downloader/src/server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
