@@ -1,0 +1,4 @@
+# AI/TDD Portable Kit local runtime files
+tools-ai/notebooklm/chrome_profile/
+__pycache__/
+*.pyc

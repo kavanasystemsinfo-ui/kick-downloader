@@ -1,0 +1,103 @@
+# AI-assisted TDD Engineering System
+
+## 1. Lazy and efficient filter
+
+Before writing or suggesting code, stop at the first rung that holds:
+
+1. Does this need to be built at all? Apply YAGNI.
+2. Can the standard library or native platform feature solve it? Use that.
+3. Can an already-installed dependency solve it without adding complexity? Use that.
+4. Prefer deletion over addition.
+5. Prefer boring, readable solutions over clever abstractions.
+
+## 2. Context-first rule
+
+Before modifying application logic, read the relevant project context:
+
+1. [`docs/roadmap.md`](docs/roadmap.md)
+2. [`docs/ai/outputs/reporte_fase_actual.md`](docs/ai/outputs/reporte_fase_actual.md)
+3. The architecture or technical docs related to the requested change.
+4. Existing tests near the target behavior.
+
+Do not rely on conversational memory as the source of truth.
+
+## 3. Optional NotebookLM context loop
+
+Use NotebookLM only when external synthesis or additional context is needed.
+
+When using the bridge:
+
+1. Run `tools-ai/notebooklm/notebook_bridge.py` or the project launcher.
+2. Review the generated Markdown output.
+3. Review `docs/ai/outputs/notebooklm_session_latest.json` if present.
+4. Treat NotebookLM output as a research aid, not as source of truth.
+5. Present a concise plan and wait for explicit human approval before modifying code.
+
+## 4. Strict TDD loop
+
+Do not modify application business logic without completing this loop:
+
+1. Identify the smallest behavior to add, change, or protect.
+2. Write the spec first.
+3. Run the test and verify a controlled red failure.
+4. Implement the minimal production change.
+5. Run the test and verify green.
+6. Refactor only after the green result is secured.
+
+## 5. Reverse audit priority
+
+Before adding new features, check whether existing core logic lacks tests.
+
+Prioritize tests for:
+
+- pure domain services,
+- state machines,
+- validators,
+- guards,
+- controllers,
+- API clients,
+- stores,
+- queues,
+- persistence adapters,
+- CLI parsers and commands.
+
+Avoid UI/component tests unless explicitly requested.
+
+## 6. Testing boundaries
+
+Use the native test stack of the project:
+
+- backend frameworks should use their own testing utilities,
+- frontend logic should use the installed frontend test runner,
+- scripts and CLIs should use lightweight unit tests,
+- infrastructure scripts should use smoke tests where practical.
+
+Keep tests focused on behavior, invariants, edge cases, and regression protection.
+
+## 7. Documentation gate
+
+Update `docs/roadmap.md` only after the relevant test suite is green.
+
+Documentation updates should record:
+
+- what changed,
+- why it changed,
+- tests added or fixed,
+- validation commands,
+- remaining risks or follow-ups.
+
+## 8. Safety and data-loss prevention
+
+- Validate inputs at trust boundaries.
+- Do not introduce destructive operations without confirmation.
+- Do not commit secrets, tokens, private keys, or credentials.
+- Preserve user data and state during migrations or refactors.
+- Fail closed when authorization, validation, or state integrity is uncertain.
+
+## 9. Engineering style
+
+- Keep changes small and reviewable.
+- Avoid unnecessary abstractions.
+- Prefer explicit names over hidden magic.
+- Keep configuration separate from behavior.
+- Mark intentional simplifications with a short comment explaining the limit and upgrade path.

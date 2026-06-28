@@ -1,0 +1,60 @@
+====================================================================
+GUÍA DE ENTORNOS PYTHON PARA PROYECTOS IA (PORTABLE KIT)
+====================================================================
+
+Al copiar tu "ai-tdd-portable-kit" a un nuevo proyecto, tienes dos 
+opciones para instalar las dependencias (como Selenium, Requests, etc) 
+necesarias para que el puente de NotebookLM funcione.
+
+--------------------------------------------------------------------
+OPCIÓN A: EL MÉTODO ROBUSTO (Aislado por proyecto - RECOMENDADO)
+--------------------------------------------------------------------
+Ideal si los proyectos tienen dependencias distintas o quieres que 
+sean 100% independientes.
+
+PASO A PASO (En cada nuevo proyecto):
+1. Abre la terminal en la carpeta de tu nuevo proyecto.
+2. Crea el entorno virtual:
+   python -m venv .venv
+3. Activa el entorno virtual:
+   .\.venv\Scripts\activate
+4. Instala las dependencias:
+   pip install -r tools-ai/notebooklm/requirements.txt
+5. Listo. Cuando ejecutes el script, asegúrate de que el entorno
+   ( .venv ) esté activado, o ejecuta directamente:
+   .\.venv\Scripts\python.exe tools-ai/notebooklm/notebook_bridge.py
+
+
+--------------------------------------------------------------------
+OPCIÓN B: EL MÉTODO "ENTORNO GLOBAL COMPARTIDO" (Para ahorrar tiempo)
+--------------------------------------------------------------------
+Ideal si tienes 20 proyectos en esta misma carpeta y TODOS van a 
+usar exactamente la misma versión del notebook_bridge.py.
+
+PASO A PASO (Hacer esto SOLO UNA VEZ):
+1. En esta carpeta raíz (proyectos IA), crea una carpeta base:
+   mkdir Global-AI-Env
+2. Entra en la carpeta:
+   cd Global-AI-Env
+3. Crea el entorno virtual maestro:
+   python -m venv .venv
+4. Actívalo:
+   .\.venv\Scripts\activate
+5. Instala las dependencias (necesitarás copiar el requirements.txt
+   del portable kit a esta carpeta primero, o apuntar a él):
+   pip install -r "..\ai-tdd-portable-kit (autonotebook&tests)\tools-ai\notebooklm\requirements.txt"
+
+PASO A PASO (En cada nuevo proyecto):
+1. Ya NO necesitas crear un .venv ni hacer pip install.
+2. Simplemente modifica el archivo .bat o comando que uses para
+   lanzar el puente, para que siempre apunte al Python global:
+   
+   Ruta a usar:
+   "C:\Users\jorge\Desktop\proyectos IA\Global-AI-Env\.venv\Scripts\python.exe" tools-ai/notebooklm/notebook_bridge.py
+
+====================================================================
+REGLA DE ORO: 
+Nunca uses un simple "pip install" global de Windows sin un entorno 
+virtual (.venv), ya que con el tiempo romperás las dependencias 
+entre proyectos (Dependency Hell).
+====================================================================
