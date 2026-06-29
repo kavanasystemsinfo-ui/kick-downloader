@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kick Downloader</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/kick-downloader/manifest.json">
+    <link rel="icon" href="/kick-downloader/favicon.png" sizes="any">
+    <link rel="apple-touch-icon" href="/kick-downloader/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a3e">
+    <meta name="application-name" content="KickDL">
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -123,6 +133,13 @@
     </div>
 
     <script>
+        // PWA - Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/kick-downloader/sw.js')
+                .then(() => console.log('SW registered'))
+                .catch(e => console.warn('SW error', e));
+        }
+
         const API_URL = "http://167.233.97.71:8000";
 
         async function startDownload() {

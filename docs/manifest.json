@@ -1,0 +1,23 @@
+{
+  "name": "Kick Downloader",
+  "short_name": "KickDL",
+  "description": "Descarga videos y audio de Kick.com",
+  "start_url": "/kick-downloader/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#1a1a3e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/kick-downloader/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/kick-downloader/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
