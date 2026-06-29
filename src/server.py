@@ -4,6 +4,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 import subprocess
@@ -11,6 +12,19 @@ import uuid
 import os
 
 app = FastAPI(title="Kick Downloader API")
+
+# CORS para GitHub Pages
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://kavanasystemsinfo-ui.github.io",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 DOWNLOAD_DIR = Path("/opt/kick-downloader/downloads")
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
