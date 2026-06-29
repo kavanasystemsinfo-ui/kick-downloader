@@ -7,9 +7,10 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
-import subprocess
 import uuid
 import os
+
+from downloader import KickDownloader
 
 app = FastAPI(title="Kick Downloader API")
 
@@ -52,39 +53,28 @@ async def health():
 
 @app.post("/download")
 async def download_video(request: DownloadRequest):
-    """Download and convert Kick video."""
+    """Download Kick video using yt_dlp with impersonation."""
     # Validate URL
     if "kick.com" not in request.url:
         raise HTTPException(400, "Invalid Kick URL")
     
-    # Generate unique filename
-    file_id = str(uuid.uuid4())[:8]
-    output_file = DOWNLOAD_DIR / f"{file_id}.{request.format}"
-    
     try:
-        # Download with yt-dlp
-        cmd = [
-            "yt-dlp",
-            "-o", str(output_file),
-            "-f", "bestvideo+bestaudio/best" if request.format == "mp4" else "bestaudio",
-            request.url
-        ]
+        dl = KickDownloader(output_dir=str(DOWNLOAD_DIR))
+        result = dl.download_stream(request.url, quality="best")
         
-        if request.format == "mp3":
-            cmd.extend(["--extract-audio", "--audio-format", "mp3"])
+        if result.get("status") == "error":
+            raise HTTPException(500, result.get("message", "Download failed"))
         
-        result = subprocess.run(cmd, capture_output=True, timeout=300)
-        
-        if result.returncode != 0:
-            raise HTTPException(500, f"Download failed: {result.stderr.decode()}")
-        
+        file_path = Path(result["file_path"])
         return {
             "status": "success",
-            "file_url": f"/files/{output_file.name}",
-            "file_path": str(output_file)
+            "file_url": f"/files/{file_path.name}",
+            "file_path": str(file_path)
         }
-    except subprocess.TimeoutExpired:
-        raise HTTPException(500, "Download timeout")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Download error: {str(e)}")
 
 @app.get("/files/{filename}")
 async def get_file(filename: str):

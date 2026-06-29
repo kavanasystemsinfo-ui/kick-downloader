@@ -35,7 +35,7 @@ class KickDownloader:
         return None
     
     def download_stream(self, channel: str, quality: str = "best", dry_run: bool = False) -> dict:
-        """Download stream from channel.
+        """Download stream from channel using yt_dlp module.
         
         Args:
             channel: Kick URL or channel name
@@ -44,47 +44,63 @@ class KickDownloader:
         Returns:
             dict with status and metadata
         """
+        import uuid
+        import traceback
+        
         # Validate the URL
         if "kick.com" not in channel:
             raise ValueError("Invalid Kick URL")
         
+        file_id = str(uuid.uuid4())[:8]
+        output_path = self.output_dir / f"{file_id}.%(ext)s"
+        
         if dry_run:
             return {"status": "dry_run", "channel": channel, "quality": quality}
         
-        # Get stream URL
-        stream_url = self.get_stream_url(channel)
-        if not stream_url:
-            return {"status": "error", "message": "Stream not found or offline"}
-        
-        # Download with yt-dlp
-        import subprocess
-        import uuid
-        
-        file_id = str(uuid.uuid4())[:8]
-        output_path = self.output_dir / f"{file_id}.mp4"
+        # Configure yt-dlp options with impersonation
+        from yt_dlp.networking.impersonate import ImpersonateTarget
+        format_str = "bestvideo+bestaudio/best" if quality == "best" else "worst"
+        ydl_opts = {
+            'format': format_str,
+            'outtmpl': str(output_path),
+            'quiet': False,
+            'no_warnings': False,
+            'extract_flat': False,
+            'impersonate': ImpersonateTarget('chrome'),
+        }
         
         try:
-            cmd = [
-                "yt-dlp",
-                "-o", str(output_path),
-                "-f", "bestvideo+bestaudio/best" if quality == "best" else "worst",
-                channel
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            
-            if result.returncode != 0:
-                return {"status": "error", "message": f"Download failed: {result.stderr}"}
-            
-            return {
-                "status": "success",
-                "file_path": str(output_path),
-                "file_size": output_path.stat().st_size if output_path.exists() else 0,
-                "channel": channel
-            }
-        except subprocess.TimeoutExpired:
-            return {"status": "error", "message": "Download timeout after 300s"}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(channel, download=True)
+                if info is None:
+                    return {"status": "error", "message": "No info returned from yt-dlp"}
+                
+                # Get actual output file path
+                actual_file = ydl.prepare_filename(info)
+                if info.get('ext'):
+                    actual_file = actual_file.replace('%(ext)s', info['ext'])
+                
+                # Find the actual file that was downloaded
+                downloaded = list(self.output_dir.glob(f"{file_id}.*"))
+                if downloaded:
+                    actual_path = downloaded[0]
+                    return {
+                        "status": "success",
+                        "file_path": str(actual_path),
+                        "file_size": actual_path.stat().st_size,
+                        "channel": channel
+                    }
+                
+                return {"status": "error", "message": "File not found after download"}
+                
+        except yt_dlp.utils.DownloadError as e:
+            msg = str(e) or (e.args[0] if e.args else 'Unknown error')
+            if msg.startswith('ERROR: '):
+                msg = msg[7:]
+            return {"status": "error", "message": msg}
         except Exception as e:
-            return {"status": "error", "message": str(e)}
+            msg = str(e) or (e.args[0] if e.args else 'Unknown error')
+            return {"status": "error", "message": f"Error: {msg}"}
     
     def list_downloaded(self) -> list:
         """List downloaded videos."""
