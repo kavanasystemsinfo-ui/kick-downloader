@@ -45,6 +45,7 @@ async def root():
 class DownloadRequest(BaseModel):
     url: str
     format: str = "mp4"  # mp4, mp3
+    quality: str = "worst"  # best, worst
 
 @app.get("/health")
 async def health():
@@ -60,7 +61,11 @@ async def download_video(request: DownloadRequest):
     
     try:
         dl = KickDownloader(output_dir=str(DOWNLOAD_DIR))
-        result = dl.download_stream(request.url, quality="best")
+        result = dl.download_stream(
+            request.url, 
+            quality=request.quality,
+            output_format=request.format
+        )
         
         if result.get("status") == "error":
             raise HTTPException(500, result.get("message", "Download failed"))

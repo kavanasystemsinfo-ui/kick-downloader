@@ -34,13 +34,14 @@ class KickDownloader:
             pass
         return None
     
-    def download_stream(self, channel: str, quality: str = "best", dry_run: bool = False) -> dict:
+    def download_stream(self, channel: str, quality: str = "worst", dry_run: bool = False, output_format: str = "mp4") -> dict:
         """Download stream from channel using yt_dlp module.
         
         Args:
             channel: Kick URL or channel name
             quality: Video quality (best, worst)
             dry_run: If True, validate URL only without downloading
+            output_format: mp4 (video) or mp3 (audio only)
         Returns:
             dict with status and metadata
         """
@@ -52,22 +53,40 @@ class KickDownloader:
             raise ValueError("Invalid Kick URL")
         
         file_id = str(uuid.uuid4())[:8]
-        output_path = self.output_dir / f"{file_id}.%(ext)s"
         
         if dry_run:
             return {"status": "dry_run", "channel": channel, "quality": quality}
         
         # Configure yt-dlp options with impersonation
         from yt_dlp.networking.impersonate import ImpersonateTarget
-        format_str = "bestvideo+bestaudio/best" if quality == "best" else "worst"
-        ydl_opts = {
-            'format': format_str,
-            'outtmpl': str(output_path),
-            'quiet': False,
-            'no_warnings': False,
-            'extract_flat': False,
-            'impersonate': ImpersonateTarget('chrome'),
-        }
+        
+        output_path = self.output_dir / f"{file_id}.%(ext)s"
+        
+        if output_format == "mp3":
+            # Audio only - much smaller, 100-300 MB for 4h stream
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': str(output_path),
+                'quiet': False,
+                'no_warnings': False,
+                'extract_flat': False,
+                'impersonate': ImpersonateTarget('chrome'),
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                }],
+            }
+        else:
+            # Video with quality selection
+            format_str = "worstvideo+worstaudio/worst" if quality == "worst" else "bestvideo+bestaudio/best"
+            ydl_opts = {
+                'format': format_str,
+                'outtmpl': str(output_path),
+                'quiet': False,
+                'no_warnings': False,
+                'extract_flat': False,
+                'impersonate': ImpersonateTarget('chrome'),
+            }
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:

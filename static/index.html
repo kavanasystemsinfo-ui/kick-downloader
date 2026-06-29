@@ -162,11 +162,15 @@
         </div>
 
         <div class="form-group">
-            <label>Formato</label>
+            <label>Formato y Calidad</label>
             <div class="format-group">
                 <select id="format-select">
                     <option value="mp4">🎬 MP4 (Video)</option>
                     <option value="mp3">🎵 MP3 (Solo Audio)</option>
+                </select>
+                <select id="quality-select">
+                    <option value="best">🔥 Alta calidad</option>
+                    <option value="worst" selected>⚡ Rápido (baja)</option>
                 </select>
             </div>
         </div>
@@ -195,53 +199,63 @@
         async function startDownload() {
             const url = document.getElementById('url-input').value.trim();
             const format = document.getElementById('format-select').value;
+            const quality = document.getElementById('quality-select').value;
             const btn = document.getElementById('download-btn');
             const status = document.getElementById('status-box');
             const msg = document.getElementById('status-msg');
 
-            // Validar URL
-            if (!url) {
-                showStatus('⚠️ Introduce una URL de Kick.com', 'error');
-                return;
-            }
-            if (!url.includes('kick.com')) {
-                showStatus('❌ Solo URLs de Kick.com son válidas', 'error');
-                return;
-            }
+            if (!url) { showStatus('⚠️ Introduce una URL de Kick.com', 'error'); return; }
+            if (!url.includes('kick.com')) { showStatus('❌ Solo URLs de Kick.com son válidas', 'error'); return; }
 
-            // Deshabilitar botón
             btn.disabled = true;
-            btn.textContent = '⏳ Procesando...';
+            btn.textContent = '⏳ Descargando...';
             status.className = 'status loading';
             status.style.display = 'block';
-            msg.innerHTML = '<span class="spinner"></span>Conectando con el servidor...';
+
+            // Mensaje según formato
+            let infoMsg = '';
+            if (format === 'mp3') {
+                infoMsg = '🎵 Solo audio. Un stream de 4h ≈ ~200MB.';
+            } else if (quality === 'worst') {
+                infoMsg = '🎬 Baja calidad. Videos largos tardan varios minutos.';
+            } else {
+                infoMsg = '⚠️ Alta calidad. Un VOD de 4h puede pesar >10GB y tardar 30+ min.';
+            }
+            msg.innerHTML = `<span class="spinner"></span>Descargando...<br><span style="font-size:12px;opacity:0.7;">${infoMsg}</span>`;
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 600000);
 
             try {
                 const res = await fetch(API_URL + '/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, format })
+                    body: JSON.stringify({ url, format, quality }),
+                    signal: controller.signal
                 });
-
+                clearTimeout(timeout);
                 const data = await res.json();
 
-                if (!res.ok) {
-                    throw new Error(data.detail || 'Error del servidor');
-                }
+                if (!res.ok) throw new Error(data.detail || 'Error del servidor');
 
                 if (data.status === 'success') {
                     const dlUrl = API_URL + '/files/' + data.file_path.split('/').pop();
+                    const sizeMB = data.file_size ? (data.file_size / 1024 / 1024).toFixed(1) : null;
                     showStatus(
                         `✅ ¡Descarga completada!<br>
                          📁 <a href="${dlUrl}" target="_blank">Descargar archivo</a>
-                         ${data.file_size ? `<br>📦 Tamaño: ${(data.file_size / 1024 / 1024).toFixed(1)} MB` : ''}`,
+                         ${sizeMB ? `<br>📦 Tamaño: ${sizeMB} MB` : ''}`,
                         'success'
                     );
                 } else {
-                    showStatus(`❌ ${data.message || data.detail || 'Error desconocido'}`, 'error');
+                    showStatus(`❌ ${data.message || data.detail || 'Error'}`, 'error');
                 }
             } catch (err) {
-                showStatus(`❌ ${err.message}`, 'error');
+                if (err.name === 'AbortError') {
+                    showStatus('⏰ Tiempo agotado (>10 min). Prueba MP3 o calidad rápida.', 'error');
+                } else {
+                    showStatus(`❌ ${err.message}`, 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = '⬇ Descargar';
