@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Kick stream downloader - TDD approach + speed optimizations."""
+"""Kick stream downloader - TDD approach + speed + progress."""
 
-import subprocess
 import yt_dlp
 from pathlib import Path
-from typing import Optional
 
 
 class KickDownloader:
@@ -14,39 +12,22 @@ class KickDownloader:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_stream_url(self, channel: str) -> Optional[str]:
-        """Get stream URL for a Kick channel."""
-        if "kick.com" not in channel or "notkick" in channel:
-            raise ValueError("Invalid Kick URL")
-
-        ydl_opts = {"quiet": True, "no_warnings": True}
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(channel, download=False)
-                if info and "url" in info:
-                    return info["url"]
-                elif info and "formats" in info:
-                    for f in info["formats"]:
-                        if f.get("ext") == "mp4":
-                            return f["url"]
-        except Exception:
-            pass
-        return None
-
     def download_stream(
         self,
         channel: str,
         quality: str = "worst",
         dry_run: bool = False,
         output_format: str = "mp4",
+        progress_callback: callable = None,
     ) -> dict:
-        """Download stream from channel using yt_dlp module.
+        """Download stream with optional progress reporting.
 
-        Speed optimizations applied:
-        - throttledratelimit: bypass Kick's speed throttling
-        - concurrent_fragments: download fragments in parallel
-        - buffered: prevent write bottlenecks
-        - fragment_retries + retries: better error recovery
+        Args:
+            channel: Kick URL
+            quality: best/worst
+            dry_run: validate only
+            output_format: mp4/mp3
+            progress_callback: func(progress_dict) called during download
         """
         import uuid
 
@@ -62,22 +43,37 @@ class KickDownloader:
 
         output_path = self.output_dir / f"{file_id}.%(ext)s"
 
-        # Base options for all downloads
+        # Progress hook for yt-dlp
+        def progress_hook(d):
+            if progress_callback:
+                progress_callback({
+                    "status": d.get("status", "downloading"),
+                    "downloaded_bytes": d.get("downloaded_bytes", 0),
+                    "total_bytes": d.get("total_bytes") or d.get("total_bytes_estimate", 0),
+                    "speed": d.get("speed", 0),
+                    "eta": d.get("eta", 0),
+                    "percentage": d.get("_percent_str", "0%").strip(),
+                    "speed_str": d.get("_speed_str", "").strip(),
+                    "eta_str": d.get("_eta_str", "").strip(),
+                    "file_id": file_id,
+                })
+
         ydl_opts = {
             "outtmpl": str(output_path),
-            "quiet": False,
-            "no_warnings": False,
+            "quiet": True,
+            "no_warnings": True,
             "extract_flat": False,
             "impersonate": ImpersonateTarget("chrome"),
-            # SPEED OPTIMIZATIONS:
-            "throttledratelimit": 100000000,  # Bypass throttling (100 MB/s cap)
-            "concurrent_fragments": 5,  # Download fragments in parallel
-            "buffered": True,  # Buffer output file
-            "fragment_retries": 5,  # Retry failed fragments
-            "retries": 10,  # Retry on download errors
-            "skip_unavailable_fragments": True,  # Skip problematic fragments
-            "extractor_retries": 3,  # Retry on extractor errors
-            "file_access_retries": 5,  # Retry file access errors
+            "progress_hooks": [progress_hook],
+            # Speed optimizations
+            "throttledratelimit": 100000000,
+            "concurrent_fragments": 5,
+            "buffered": True,
+            "fragment_retries": 5,
+            "retries": 10,
+            "skip_unavailable_fragments": True,
+            "extractor_retries": 3,
+            "file_access_retries": 5,
         }
 
         if output_format == "mp3":
@@ -89,21 +85,14 @@ class KickDownloader:
                 }],
             })
         else:
-            format_str = (
-                "worstvideo+worstaudio/worst"
-                if quality == "worst"
-                else "bestvideo+bestaudio/best"
-            )
-            ydl_opts.update({"format": format_str})
+            fmt = "worstvideo+worstaudio/worst" if quality == "worst" else "bestvideo+bestaudio/best"
+            ydl_opts.update({"format": fmt})
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(channel, download=True)
                 if info is None:
-                    return {
-                        "status": "error",
-                        "message": "No info returned from yt-dlp",
-                    }
+                    return {"status": "error", "message": "No info returned from yt-dlp"}
 
                 downloaded = list(self.output_dir.glob(f"{file_id}.*"))
                 if downloaded:
@@ -114,11 +103,7 @@ class KickDownloader:
                         "file_size": actual_path.stat().st_size,
                         "channel": channel,
                     }
-
-                return {
-                    "status": "error",
-                    "message": "File not found after download",
-                }
+                return {"status": "error", "message": "File not found after download"}
 
         except yt_dlp.utils.DownloadError as e:
             msg = str(e) or (e.args[0] if e.args else "Unknown error")
@@ -126,9 +111,4 @@ class KickDownloader:
                 msg = msg[7:]
             return {"status": "error", "message": msg}
         except Exception as e:
-            msg = str(e) or (e.args[0] if e.args else "Unknown error")
-            return {"status": "error", "message": f"Error: {msg}"}
-
-    def list_downloaded(self) -> list:
-        """List downloaded videos."""
-        return list(self.output_dir.glob("*.mp4"))
+            return {"status": "error", "message": f"Error: {e}"}

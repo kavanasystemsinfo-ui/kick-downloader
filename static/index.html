@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kick Downloader</title>
-    
+
     <!-- PWA -->
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" href="/static/favicon.png" sizes="any">
@@ -13,9 +14,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a3e">
     <meta name="application-name" content="KickDL">
-    
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
@@ -26,20 +32,23 @@
             padding: 20px;
             color: #e0e0e0;
         }
+
         .container {
             background: rgba(30, 30, 60, 0.9);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             padding: 40px;
             width: 100%;
-            max-width: 500px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 520px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
+
         .logo {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .logo h1 {
             font-size: 28px;
             font-weight: 800;
@@ -47,14 +56,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .logo p {
             color: #8888aa;
             font-size: 14px;
             margin-top: 4px;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             font-size: 13px;
@@ -64,31 +76,39 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        input, select {
+
+        input,
+        select {
             width: 100%;
             padding: 14px 16px;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             color: #fff;
             font-size: 16px;
             transition: all 0.3s;
             outline: none;
         }
-        input:focus, select:focus {
+
+        input:focus,
+        select:focus {
             border-color: #6e8efb;
             box-shadow: 0 0 20px rgba(110, 142, 251, 0.15);
         }
+
         select option {
             background: #1a1a3e;
         }
+
         .format-group {
             display: flex;
             gap: 12px;
         }
+
         .format-group select {
             flex: 1;
         }
+
         .btn {
             width: 100%;
             padding: 16px;
@@ -101,12 +121,18 @@
             background: linear-gradient(135deg, #6e8efb, #a777e3);
             color: #fff;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(110,142,251,0.4); }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(110, 142, 251, 0.4);
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
+
         .status {
             margin-top: 20px;
             padding: 16px;
@@ -115,16 +141,76 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        .status.success { display: block; background: rgba(0,200,100,0.15); border: 1px solid rgba(0,200,100,0.3); }
-        .status.error { display: block; background: rgba(255,50,50,0.15); border: 1px solid rgba(255,50,50,0.3); }
-        .status.loading { display: block; background: rgba(110,142,251,0.1); border: 1px solid rgba(110,142,251,0.2); }
-        .status a { color: #6e8efb; font-weight: 600; }
+
+        .status.success {
+            display: block;
+            background: rgba(0, 200, 100, 0.15);
+            border: 1px solid rgba(0, 200, 100, 0.3);
+        }
+
+        .status.error {
+            display: block;
+            background: rgba(255, 50, 50, 0.15);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+        }
+
+        .status.loading {
+            display: block;
+            background: rgba(110, 142, 251, 0.1);
+            border: 1px solid rgba(110, 142, 251, 0.2);
+        }
+
+        .status a {
+            color: #6e8efb;
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6e8efb, #a777e3);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8888bb;
+            margin-top: 6px;
+        }
+
+        .progress-info span {
+            font-variant-numeric: tabular-nums;
+        }
+
         .footer {
             text-align: center;
             margin-top: 24px;
             font-size: 12px;
             color: #555577;
         }
+
         .spinner {
             display: inline-block;
             width: 16px;
@@ -136,10 +222,16 @@
             margin-right: 8px;
             vertical-align: middle;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .badge {
             display: inline-block;
-            background: rgba(110,142,251,0.2);
+            background: rgba(110, 142, 251, 0.2);
             color: #6e8efb;
             padding: 2px 8px;
             border-radius: 4px;
@@ -149,6 +241,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="logo">
@@ -162,32 +255,38 @@
         </div>
 
         <div class="form-group">
-            <label>Formato y Calidad</label>
+            <label>Formato</label>
             <div class="format-group">
                 <select id="format-select">
-                    <option value="mp4">🎬 MP4 (Video)</option>
-                    <option value="mp3">🎵 MP3 (Solo Audio)</option>
-                </select>
-                <select id="quality-select">
-                    <option value="best">🔥 Alta calidad</option>
-                    <option value="worst" selected>⚡ Rápido (baja)</option>
+                    <option value="mp3" selected>🎵 MP3 (Solo Audio) ✅</option>
                 </select>
             </div>
         </div>
 
         <button class="btn" id="download-btn" onclick="startDownload()">⬇ Descargar</button>
 
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-info">
+                <span id="progress-percent">0%</span>
+                <span id="progress-speed">—</span>
+                <span id="progress-eta">—</span>
+            </div>
+        </div>
+
         <div class="status" id="status-box">
             <div id="status-msg"></div>
         </div>
 
         <div class="footer">
-            ⚡ Servicio activo · Los streams deben estar en vivo
+            ⚡ Servicio activo · Descarga asíncrona con progreso en tiempo real
         </div>
     </div>
 
     <script>
-        // PWA - Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js')
                 .then(() => console.log('SW registered'))
@@ -199,63 +298,97 @@
         async function startDownload() {
             const url = document.getElementById('url-input').value.trim();
             const format = document.getElementById('format-select').value;
-            const quality = document.getElementById('quality-select').value;
             const btn = document.getElementById('download-btn');
             const status = document.getElementById('status-box');
             const msg = document.getElementById('status-msg');
+            const progressContainer = document.getElementById('progress-container');
+            const progressFill = document.getElementById('progress-fill');
+            const progressPercent = document.getElementById('progress-percent');
+            const progressSpeed = document.getElementById('progress-speed');
+            const progressEta = document.getElementById('progress-eta');
 
             if (!url) { showStatus('⚠️ Introduce una URL de Kick.com', 'error'); return; }
             if (!url.includes('kick.com')) { showStatus('❌ Solo URLs de Kick.com son válidas', 'error'); return; }
 
+            // Reset UI
             btn.disabled = true;
-            btn.textContent = '⏳ Descargando...';
+            btn.textContent = '⏳ Iniciando...';
             status.className = 'status loading';
-            status.style.display = 'block';
-
-            // Mensaje según formato
-            let infoMsg = '';
-            if (format === 'mp3') {
-                infoMsg = '🎵 Solo audio. Un stream de 4h ≈ ~200MB.';
-            } else if (quality === 'worst') {
-                infoMsg = '🎬 Baja calidad. Videos largos tardan varios minutos.';
-            } else {
-                infoMsg = '⚠️ Alta calidad. Un VOD de 4h puede pesar >10GB y tardar 30+ min.';
-            }
-            msg.innerHTML = `<span class="spinner"></span>Descargando...<br><span style="font-size:12px;opacity:0.7;">${infoMsg}</span>`;
-
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 600000);
+            status.style.display = 'none';
+            progressContainer.classList.remove('active');
 
             try {
-                const res = await fetch(API_URL + '/download', {
+                // Start download (returns immediately with job_id)
+                const startRes = await fetch(API_URL + '/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, format, quality }),
-                    signal: controller.signal
+                    body: JSON.stringify({ url, format, quality: 'worst' }),
                 });
-                clearTimeout(timeout);
-                const data = await res.json();
+                const startData = await startRes.json();
 
-                if (!res.ok) throw new Error(data.detail || 'Error del servidor');
+                if (!startRes.ok) throw new Error(startData.detail || 'Error al iniciar');
 
-                if (data.status === 'success') {
-                    const dlUrl = API_URL + '/files/' + data.file_path.split('/').pop();
-                    const sizeMB = data.file_size ? (data.file_size / 1024 / 1024).toFixed(1) : null;
-                    showStatus(
-                        `✅ ¡Descarga completada!<br>
-                         📁 <a href="${dlUrl}" target="_blank">Descargar archivo</a>
-                         ${sizeMB ? `<br>📦 Tamaño: ${sizeMB} MB` : ''}`,
-                        'success'
-                    );
-                } else {
-                    showStatus(`❌ ${data.message || data.detail || 'Error'}`, 'error');
+                const jobId = startData.job_id;
+                btn.textContent = '⏳ Descargando...';
+
+                // Show progress container
+                progressContainer.classList.add('active');
+                status.style.display = 'none';
+
+                // Poll progress
+                let completed = false;
+                while (!completed) {
+                    const progRes = await fetch(API_URL + '/progress/' + jobId);
+                    const prog = await progRes.json();
+
+                    if (prog.status === 'not_found') {
+                        showStatus('❌ Job no encontrado (expirado)', 'error');
+                        break;
+                    }
+
+                    switch (prog.status) {
+                        case 'starting':
+                            progressPercent.textContent = 'Iniciando...';
+                            progressSpeed.textContent = '⏳';
+                            progressEta.textContent = 'Conectando con Kick...';
+                            break;
+
+                        case 'downloading':
+                            progressFill.style.width = prog.percentage || '0%';
+                            progressPercent.textContent = prog.percentage || '0%';
+                            progressSpeed.textContent = prog.speed_str ? '⚡ ' + prog.speed_str : '—';
+                            progressEta.textContent = prog.eta_str ? '⏱ ' + prog.eta_str : '—';
+                            break;
+
+                        case 'completed':
+                            progressFill.style.width = '100%';
+                            progressPercent.textContent = '100%';
+                            progressSpeed.textContent = '✅';
+                            progressEta.textContent = 'Completado';
+                            completed = true;
+
+                            const dlUrl = API_URL + prog.file_url;
+                            const sizeInfo = prog.file_size_mb ? ` (${prog.file_size_mb} MB)` : '';
+                            showStatus(
+                                `✅ ¡Descarga completada!<br>
+                                 📁 <a href="${dlUrl}" target="_blank">Descargar archivo</a>${sizeInfo}`,
+                                'success'
+                            );
+                            break;
+
+                        case 'error':
+                            progressFill.style.width = '0%';
+                            completed = true;
+                            showStatus(`❌ ${prog.error || 'Error durante la descarga'}`, 'error');
+                            break;
+                    }
+
+                    if (!completed) {
+                        await new Promise(r => setTimeout(r, 1500));
+                    }
                 }
             } catch (err) {
-                if (err.name === 'AbortError') {
-                    showStatus('⏰ Tiempo agotado (>10 min). Prueba MP3 o calidad rápida.', 'error');
-                } else {
-                    showStatus(`❌ ${err.message}`, 'error');
-                }
+                showStatus(`❌ ${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = '⬇ Descargar';
@@ -271,4 +404,5 @@
         }
     </script>
 </body>
+
 </html>
